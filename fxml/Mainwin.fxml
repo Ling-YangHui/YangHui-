@@ -45,7 +45,7 @@
                                  <children>
                                     <ButtonBar layoutX="256.0" layoutY="9.0" prefHeight="40.0" prefWidth="200.0">
                                       <buttons>
-                                        <Button fx:id="storePictureButton" disable="true" mnemonicParsing="false" text="另存图像" />
+                                        <Button fx:id="storePictureButton" mnemonicParsing="false" onAction="#loadImage" text="另存图像" />
                                           <Button fx:id="closePictureButton" mnemonicParsing="false" onAction="#ClosePicture" text="关闭图像" />
                                           <Button fx:id="exitProgramButton" mnemonicParsing="false" onAction="#ExitProgram" text="退出程序" />
                                       </buttons>

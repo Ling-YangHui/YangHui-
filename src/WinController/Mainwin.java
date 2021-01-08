@@ -81,10 +81,36 @@ public class Mainwin {
     @FXML
     private Button exitProgramButton;
 
-    private String nowChoiceMode;
+    private String nowChoiceMode = "NEW";
     private ObservableList<MessageItems> messageInSearchCache;
-    private Vector<File> subDirList;
+    private Vector<File> groupDirList;
+    private Vector<MessageList> groupMessageList;
+
     private String pastActiveGroup;
+
+    public String getActiveGroup() {
+        if (groupList.getExpandedPane() != null) {
+            String activeGroup = groupList.getExpandedPane().getText();
+            if (activeGroup.indexOf("搜索结果") != -1)
+                activeGroup = pastActiveGroup;
+            else
+                pastActiveGroup = activeGroup;
+        }
+        return pastActiveGroup;
+    }
+
+    @FXML
+    void loadImage() {
+        StageController.showInputWin();
+    }
+
+    public Vector<File> getGroupDirList() {
+        return groupDirList;
+    }
+
+    public Vector<MessageList> getGroupMessageList() {
+        return groupMessageList;
+    }
 
     @FXML
     void ClosePicture(ActionEvent event) {
@@ -111,7 +137,7 @@ public class Mainwin {
                     activeGroup = pastActiveGroup;
                 else
                     pastActiveGroup = activeGroup;
-                for (File file : subDirList) {
+                for (File file : groupDirList) {
                     String fileGroupString = file.getName();
                     if (fileGroupString.equals(activeGroup)) {
                         for (File file2 : file.listFiles()) {
@@ -120,6 +146,15 @@ public class Mainwin {
                                 if (fileName[1].indexOf("png") == -1 && fileName[1].indexOf("jpg") == -1)
                                     continue;
                                 if (fileName[0].indexOf(keyWord) != -1 || fileName[1].indexOf(keyWord) != -1) {
+                                    boolean breakFlag = false;
+                                    if (nowChoiceMode == "OR") {
+                                        for (MessageItems items : messageInSearchCache) {
+                                            if (items.speaker.get().equals(fileName[0]) && items.saying.get().equals(fileName[1]))
+                                                breakFlag = true;
+                                        }
+                                    }
+                                    if (breakFlag)
+                                        continue;
                                     messageInSearchCache.add(new MessageItems(fileName[0], fileName[1], file2));
                                 }
                             } catch (IndexOutOfBoundsException IDOE) {
@@ -179,9 +214,13 @@ public class Mainwin {
     public void initList() {
         File rootFile = FileLocation.getFile();
         File[] subFile = rootFile.listFiles();
+        StageController.WinControllerList.put("Mainwin", this);
+
         messageInSearchCache = FXCollections.observableArrayList();
-        subDirList = new Vector<File>();
+        groupDirList = new Vector<File>();
         searchResultTable = new TableView<MessageItems>(messageInSearchCache);
+        groupMessageList = new Vector<MessageList>();
+
         TableColumn<MessageItems, String> speakerResult = new TableColumn<MessageItems, String>("发言者");
         speakerResult.setCellValueFactory(new PropertyValueFactory<MessageItems, String>("speaker"));
         TableColumn<MessageItems, String> sayingResult = new TableColumn<MessageItems, String>("怪话");
@@ -227,11 +266,11 @@ public class Mainwin {
 
         for (int i = 0; i < subFile.length; i++) {
             if (subFile[i].isDirectory()) {
-                subDirList.add(subFile[i]);
+                groupDirList.add(subFile[i]);
             }
         }
-        for (int i = 0; i < subDirList.size(); i++) {
-            File subDir = subDirList.get(i);
+        for (int i = 0; i < groupDirList.size(); i++) {
+            File subDir = groupDirList.get(i);
 
             ObservableList<MessageItems> messageList = FXCollections.observableArrayList();
             File[] pictureList = subDir.listFiles();
@@ -246,6 +285,7 @@ public class Mainwin {
 
                 }
             }
+            groupMessageList.add(new MessageList(messageList, subDir.getName()));
 
             TableView<MessageItems> groupTableView = new TableView<MessageItems>(messageList);
 
@@ -293,6 +333,8 @@ public class Mainwin {
                 }
             });
         }
+        // ObservableList<?> a = groupList.getChildrenUnmodifiable();
+        // System.out.println(a);
     }
 
     public static class MessageItems {
@@ -320,6 +362,24 @@ public class Mainwin {
 
         public void setSpeaker(String speaker) {
             this.saying.set(speaker);
+        }
+    }
+
+    public static class MessageList {
+        private ObservableList<MessageItems> messageList;
+        private String groupName;
+
+        MessageList(ObservableList<MessageItems> messageList, String groupName) {
+            this.messageList = messageList;
+            this.groupName = groupName;
+        }
+
+        public ObservableList<MessageItems> getMessageList() {
+            return messageList;
+        }
+
+        public String getGroupName() {
+            return groupName;
         }
     }
 }
